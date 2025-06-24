@@ -6,12 +6,15 @@ on:
       head_ref:
         description: 'PR head branch'
         required: true
+        type: string
       head_repo:
         description: 'PR head repo'
         required: true
+        type: string
       pr_number:
         description: 'PR number'
         required: true
+        type: string
     secrets:
       JIRA_URL:
         required: true
