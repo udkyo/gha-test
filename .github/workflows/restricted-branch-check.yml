@@ -2,6 +2,16 @@ name: Restricted Branch Check
 
 on:
   workflow_call:
+    inputs:
+      head_ref:
+        description: 'PR head branch'
+        required: true
+      head_repo:
+        description: 'PR head repo'
+        required: true
+      pr_number:
+        description: 'PR number'
+        required: true
     secrets:
       JIRA_URL:
         required: true
@@ -14,16 +24,18 @@ jobs:
   restricted-branch-check:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout target repo
+      - name: Checkout PR head
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          repository: ${{ inputs.head_repo }}
+          ref: ${{ inputs.head_ref }}
+          path: code
       - name: Checkout workflow repo
         uses: actions/checkout@v4
         with:
           repository: udkyo/gha-test
           ref: main
-          path: gha-test
+          path: workflow
       - name: Install uv
         uses: astral-sh/setup-uv@v4
         with:
@@ -32,8 +44,9 @@ jobs:
         run: uv run ./gha-test/.github/scripts/restricted-branch-check.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          REPO: ${{ github.event.repository.full_name }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+          REPO: ${{ inputs.head_repo }}
+          GITHUB_BASE_REF: ${{ github.event.pull_request.base.ref }}
           JIRA_URL: ${{ secrets.JIRA_URL }}
           JIRA_USERNAME: ${{ secrets.JIRA_USERNAME }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
