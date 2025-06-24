@@ -44,7 +44,7 @@ jobs:
         with:
           version: latest
       - name: Run restricted branch check
-        run: uv run ./gha-test/.github/scripts/restricted-branch-check.py
+        run: uv run ./workflow/.github/scripts/restricted-branch-check.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ inputs.pr_number }}
