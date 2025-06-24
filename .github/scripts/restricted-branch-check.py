@@ -34,7 +34,7 @@ def find_all_manifests(manifest_dir: Path) -> list[Path]:
     manifest_files = []
     for xml_file in manifest_dir.rglob("*.xml"):
         # Skip files in .git directory and other non-manifest files
-        if ".git" not in str(xml_file) and xml_file.name not in ["pom.xml"]:
+        if xml_file.name not in ["pom.xml"]:
             # Skip toy/ and released/ directories
             relative_path = xml_file.relative_to(manifest_dir)
             path_parts = relative_path.parts

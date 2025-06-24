@@ -3,7 +3,7 @@ name: Restricted Branch Check
 on:
   workflow_call:
     secrets:
-      GITHUB_TOKEN:
+      GITHUB_API_TOKEN:
         required: true
       JIRA_URL:
         required: true
@@ -29,7 +29,7 @@ jobs:
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REPO: ${{ github.event.repository.full_name }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_API_TOKEN: ${{ secrets.GITHUB_API_TOKEN }}
           JIRA_URL: ${{ secrets.JIRA_URL }}
           JIRA_USERNAME: ${{ secrets.JIRA_USERNAME }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
