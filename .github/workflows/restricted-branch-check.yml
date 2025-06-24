@@ -27,9 +27,9 @@ jobs:
       - name: Run restricted branch check
         run: uv run ./.github/scripts/restricted-branch-check.py
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REPO: ${{ github.event.repository.full_name }}
-          GITHUB_API_TOKEN: ${{ secrets.GITHUB_API_TOKEN }}
           JIRA_URL: ${{ secrets.JIRA_URL }}
           JIRA_USERNAME: ${{ secrets.JIRA_USERNAME }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
