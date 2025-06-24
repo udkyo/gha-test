@@ -3,7 +3,7 @@ name: Restricted Branch Check
 on:
   workflow_call:
     secrets:
-      GITHUB_API_TOKEN:
+      GITHUB_TOKEN:
         required: true
       JIRA_URL:
         required: true
