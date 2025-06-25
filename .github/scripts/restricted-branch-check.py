@@ -240,6 +240,8 @@ def main():
     jira_user = os.getenv('JIRA_USERNAME')
     jira_token = os.getenv('JIRA_API_TOKEN')
 
+    print()
+
     if not base_branch:
         print("Error: GITHUB_BASE_REF is not set. This action runs only on pull_request events.")
         sys.exit(1)
@@ -291,7 +293,7 @@ def main():
             approval_ticket = manifest['approval_ticket']
             release_name = manifest['release_name']
 
-            print(f"\nChecking approval for manifest {manifest['manifest_path']} (approval ticket: {approval_ticket})")
+            print(f"Checking approval for manifest {manifest['manifest_path']} (approval ticket: {approval_ticket})")
 
             # Get approved JIRA keys for this manifest
             approved_keys = get_approved_jira_keys(approval_ticket, jira_url, jira_user, jira_token)
