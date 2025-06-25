@@ -22,10 +22,16 @@ on:
         required: true
       JIRA_API_TOKEN:
         required: true
+    outputs:
+      check_status:
+        description: 'Status of the restricted branch check'
+        value: ${{ jobs.restricted-branch-check.outputs.status }}
 
 jobs:
   restricted-branch-check:
     runs-on: ubuntu-latest
+    outputs:
+      status: ${{ steps.branch-check.outputs.status }}
     steps:
       - name: Checkout PR head
         uses: actions/checkout@v4
@@ -44,7 +50,14 @@ jobs:
         with:
           version: latest
       - name: Run restricted branch check
-        run: uv run ./workflow/.github/scripts/restricted-branch-check.py
+        id: branch-check
+        run: |
+          echo "status=success" >> $GITHUB_OUTPUT
+          uv run ./workflow/.github/scripts/restricted-branch-check.py || {
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "::error::Restricted branch check failed - PR cannot be merged!"
+            exit 1
+          }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ inputs.pr_number }}
@@ -53,3 +66,13 @@ jobs:
           JIRA_URL: ${{ secrets.JIRA_URL }}
           JIRA_USERNAME: ${{ secrets.JIRA_USERNAME }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+      - name: Generate summary
+        if: always()
+        run: |
+          if [[ "${{ steps.branch-check.outputs.status }}" == "failure" ]]; then
+            echo "## ❌ Restricted Branch Check Failed" >> $GITHUB_STEP_SUMMARY
+            echo "This PR cannot be merged until all the restricted branch requirements are met." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ✅ Restricted Branch Check Passed" >> $GITHUB_STEP_SUMMARY
+            echo "All required approvals are in place for the target branch." >> $GITHUB_STEP_SUMMARY
+          fi

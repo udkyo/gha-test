@@ -26,7 +26,6 @@ import git
 def clone_manifest_repo(temp_dir: Path) -> Path:
     """Clone the manifest repository to a temporary directory."""
     manifest_dir = temp_dir / "manifest"
-    print("Cloning manifest repository...")
     git.Repo.clone_from("https://github.com/couchbase/manifest.git", manifest_dir)
     return manifest_dir
 
@@ -102,7 +101,6 @@ def load_product_configs(manifest_dir: Path) -> dict:
             relative_product_dir = product_dir.relative_to(manifest_dir)
 
             product_configs[str(relative_product_dir)] = config_data
-            print(f"Loaded product config for: {relative_product_dir}")
 
         except Exception as e:
             print(f"Warning: Could not load product config {config_file}: {e}")
