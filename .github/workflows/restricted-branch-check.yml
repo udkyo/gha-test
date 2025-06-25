@@ -48,7 +48,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ inputs.pr_number }}
-          REPO: ${{ inputs.head_repo }}
+          REPO: ${{ github.repository }}
           GITHUB_BASE_REF: ${{ github.event.pull_request.base.ref }}
           JIRA_URL: ${{ secrets.JIRA_URL }}
           JIRA_USERNAME: ${{ secrets.JIRA_USERNAME }}

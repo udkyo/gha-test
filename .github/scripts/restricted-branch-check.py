@@ -230,7 +230,7 @@ def get_approved_jira_keys(approval_ticket: str, jira_url: str, jira_user: str, 
 def main():
     # Get environment variables
     base_branch = os.getenv('GITHUB_BASE_REF')
-    repo = os.getenv('REPO')  # Should be in format "owner/repo-name"
+    repo = os.getenv('REPO')
     pr_number = os.getenv('PR_NUMBER')
     gh_token = os.getenv('GITHUB_TOKEN')
 
