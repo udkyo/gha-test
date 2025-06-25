@@ -2,6 +2,7 @@
 # /// script
 # requires-python = ">=3.10"
 # dependencies = [
+#     "jira>=3.5.0",
 #     "requests>=2.31.0",
 #     "GitPython>=3.1.32"
 # ]
@@ -15,6 +16,7 @@ import sys
 import json
 import shutil
 import tempfile
+from jira import JIRA
 from pathlib import Path
 from xml.etree import ElementTree
 import requests
@@ -171,6 +173,12 @@ def get_restricted_manifests(project_name: str, branch_name: str, manifest_dir: 
     return restricted_manifests
 
 
+def connect_jira(jira_url: str, jira_user: str, jira_token: str) -> JIRA:
+    """Connect to JIRA API using credentials."""
+    jira = JIRA(jira_url, basic_auth=(jira_user, jira_token))
+    return jira
+
+
 def get_jira_keys_from_commits(repo: str, pr_number: str, gh_token: str) -> set[str]:
     """Extract JIRA issue keys from commit messages in the PR."""
     commits_url = f"https://api.github.com/repos/{repo}/pulls/{pr_number}/commits"
@@ -183,48 +191,44 @@ def get_jira_keys_from_commits(repo: str, pr_number: str, gh_token: str) -> set[
 
     commits = response.json()
     jira_keys = set()
-    jira_pattern = re.compile(r'\b[A-Z]{2,}-\d+\b')
 
     for commit in commits:
         msg = commit.get('commit', {}).get('message', '')
-        for key in jira_pattern.findall(msg):
-            jira_keys.add(key)
+        keys = re.findall(r"\b[A-Z]{2,5}-[0-9]{1,6}(?![-0-9])\b", msg)
+        jira_keys.update(keys)
 
     return jira_keys
 
 
 def get_approved_jira_keys(approval_ticket: str, jira_url: str, jira_user: str, jira_token: str) -> set[str]:
     """Get all JIRA keys that are approved (linked to or subtasks of the approval ticket)."""
-    issue_api = f"{jira_url}/rest/api/2/issue/{approval_ticket}?fields=issuelinks,subtasks"
-    resp = requests.get(issue_api, auth=(jira_user, jira_token), timeout=10)
+    jira = connect_jira(jira_url, jira_user, jira_token)
 
-    if resp.status_code != 200:
-        print(f"Error: Failed to fetch JIRA issue {approval_ticket} (status {resp.status_code})")
+    try:
+        jira_issue = jira.issue(approval_ticket)
+        approved_keys = set()
+
+        # Add linked issues
+        if hasattr(jira_issue.fields, 'issuelinks'):
+            for link in jira_issue.fields.issuelinks:
+                if hasattr(link, 'outwardIssue'):
+                    approved_keys.add(link.outwardIssue.key)
+                if hasattr(link, 'inwardIssue'):
+                    approved_keys.add(link.inwardIssue.key)
+
+        # Add subtasks
+        if hasattr(jira_issue.fields, 'subtasks'):
+            for subtask in jira_issue.fields.subtasks:
+                approved_keys.add(subtask.key)
+
+        # Add the approval ticket itself
+        approved_keys.add(approval_ticket)
+
+        return approved_keys
+
+    except Exception as e:
+        print(f"Error: Failed to fetch JIRA issue {approval_ticket}: {e}")
         return set()
-
-    issue_data = resp.json()
-    fields = issue_data.get('fields', {})
-
-    approved_keys = set()
-
-    # Add linked issues
-    for link in fields.get('issuelinks', []):
-        if 'outwardIssue' in link:
-            approved_keys.add(link['outwardIssue'].get('key'))
-        if 'inwardIssue' in link:
-            approved_keys.add(link['inwardIssue'].get('key'))
-
-    # Add subtasks
-    for subtask in fields.get('subtasks', []):
-        approved_keys.add(subtask.get('key'))
-
-    # Add the approval ticket itself
-    approved_keys.add(approval_ticket)
-
-    # Remove None entries
-    approved_keys.discard(None)
-
-    return approved_keys
 
 
 def main():
